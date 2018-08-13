@@ -21,10 +21,7 @@ tokenize.fit_on_texts(all_description)
 
 max_seq_length = 170
 
-if os.path.exists(base_dir + "model/variety_prediction.h5"):
-    combined_model = keras.models.load_model(base_dir + "model/variety_prediction.h5")
-else:
-    os.error("模型文件不存在")
+
 
 @varietyPrediction.route('/')
 def index():
@@ -40,14 +37,18 @@ def index():
     test_embed = tokenize.texts_to_sequences(desc)
     test_embed = keras.preprocessing.sequence.pad_sequences(test_embed, maxlen=max_seq_length, padding="post")
 
-    print(combined_model)
-    predictions = combined_model.predict([description_bow_test, price] + [test_embed])
-    print(predictions)
-    if predictions.size > 0:
-        prediction = predictions[0]
-        index = np.argmax(prediction)
-        variety_predicted = encoder.inverse_transform(index)
-        return _ret(data={"variety_predicted":variety_predicted})
+    if os.path.exists(base_dir + "model/variety_prediction.h5"):
+        combined_model = keras.models.load_model(base_dir + "model/variety_prediction.h5")
+        predictions = combined_model.predict([description_bow_test, price] + [test_embed])
+        if predictions.size > 0:
+            prediction = predictions[0]
+            index = np.argmax(prediction)
+            variety_predicted = encoder.inverse_transform(index)
+            return _ret(data={"variety_predicted": variety_predicted})
+    else:
+        # os.error("模型文件不存在")
+        return _ret("模型文件不存在", -1)
+
 
 
 def _ret(msg="", errcode=0, data={}):
