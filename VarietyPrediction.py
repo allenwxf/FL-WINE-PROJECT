@@ -20,7 +20,7 @@ if not os.path.exists("model/variety_prediction.h5"):
     print(data.shape)
 
     data = data[pd.notnull(data['country'])]
-    data = data[pd.notnull(data['price'])]
+    data = data[pd.notnull(data['price'])] 
     data = data.drop(data.columns[0], axis=1)
 
     variety_threshold = 100
