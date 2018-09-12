@@ -14,8 +14,18 @@ layers = keras.layers
 
 print("You have TensorFlow version", tf.__version__)
 
-if not os.path.exists("model/variety_prediction_zh.h5"):
-    data = pd.read_csv("dataset/wine-review/winemag-data-130k-v2.csv")
+#初始化配置
+prediction_model_file = "model/variety_prediction_zh.h5"
+dataset_file = "dataset/wine-review/winemag-data-130k-v2-zh.csv"
+dataset_resampled_file = "dataset/wine-review/winemag-data-130k-v2-zh-resampled.csv"
+jieba_dict_file = "dataset/jieba-dict/dict.txt"
+
+jieba.load_userdict(jieba_dict_file)
+
+# resample the original data set or get the resampled according to the existense of model file
+if not os.path.exists(prediction_model_file):
+    # resample data set
+    data = pd.read_csv(dataset_file)
     data = data.sample(frac=1)
     print(data.head())
     print(data.shape)
@@ -30,9 +40,19 @@ if not os.path.exists("model/variety_prediction_zh.h5"):
     data.replace(to_remove, np.nan, inplace=True)
     data = data[pd.notnull(data['variety'])]
 
-    data.to_csv("dataset/wine-review/winemag-data-130k-v2-resampled.csv")
+    data.to_csv(dataset_resampled_file)
 else:
-    data = pd.read_csv("dataset/wine-review/winemag-data-130k-v2-resampled.csv")
+    # get resampled data set
+    data = pd.read_csv(dataset_resampled_file)
+
+
+# 中文分词
+def jieba_cut(input):
+    res = jieba.cut(input, cut_all=False, HMM=True)
+    res = " ".join(res)
+    print(res)
+    return res
+data['description_zh_cut'] = data.apply(lambda row: jieba_cut(row["description_zh"]), axis=1)
 
 
 train_size = int(len(data) * .8)
@@ -40,20 +60,20 @@ print("Train size: %d" % train_size)
 print("Test size: %d" % (len(data) - train_size))
 
 # Train features
-description_train = data['description'][:train_size]
+description_train = data['description_zh_cut'][:train_size]
 price_train = data['price'][:train_size]
 # Train labels
 labels_train_arr = data['variety'][:train_size]
 # Test features
-description_test = data['description'][train_size:]
+description_test = data['description_zh_cut'][train_size:]
 price_test = data['price'][train_size:]
 # Test labels
 labels_test_arr = data['variety'][train_size:]
 
 all_varieties = data['variety'][:]
-if not os.path.exists("model/variety_prediction.h5"):
-    all_varieties.to_csv("model/variety_labels.csv", header=['variety'])
-all_description = data['description'][:]
+# if not os.path.exists(prediction_model_file):
+#     all_varieties.to_csv("model/variety_labels.csv", header=['variety'])
+all_description = data['description_zh_cut'][:]
 
 
 encoder = LabelEncoder()
@@ -85,7 +105,7 @@ train_embed = keras.preprocessing.sequence.pad_sequences(train_embed, maxlen=max
 test_embed = keras.preprocessing.sequence.pad_sequences(test_embed, maxlen=max_seq_length, padding="post")
 
 
-if not os.path.exists("model/variety_prediction.h5"):
+if not os.path.exists(prediction_model_file):
     ################
     ## Wide Model ##
     ################
@@ -135,9 +155,9 @@ if not os.path.exists("model/variety_prediction.h5"):
     score = combined_model.evaluate([description_bow_test, price_test] + [test_embed], labels_test, batch_size=128)
     print("%s: %.2f%%" % (combined_model.metrics_names[1], score[1] * 100))
 
-    combined_model.save('model/variety_prediction.h5')
+    combined_model.save(prediction_model_file)
 else:
-    combined_model = keras.models.load_model('model/variety_prediction.h5')
+    combined_model = keras.models.load_model(prediction_model_file)
 
 
 # predict

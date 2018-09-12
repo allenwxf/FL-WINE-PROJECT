@@ -27,13 +27,14 @@ def totaltranslate(descs_file, translate_zh_file):
 
     descs = pd.read_csv(descs_file, header=None)
 
-    initline = sum(1 for line in open(translate_zh_file))
+    # fh = open(translate_zh_file)
+    # initline = sum(1 for line in fh.readlines())
 
     urls = []
     num = 0
     # for line in f:
     for i in range(len(descs)):
-        if i < initline:
+        if i < 51279:
             continue
 
         line = descs.iloc[i][1]
