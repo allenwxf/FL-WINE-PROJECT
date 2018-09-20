@@ -31,7 +31,8 @@ if not os.path.exists(prediction_model_file):
     print(data.shape)
 
     data = data[pd.notnull(data['country'])]
-    data = data[pd.notnull(data['price'])] 
+    data = data[pd.notnull(data['price'])]
+    data = data[pd.notnull(data['desc_zh'])]
     data = data.drop(data.columns[0], axis=1)
 
     variety_threshold = 100
@@ -40,19 +41,18 @@ if not os.path.exists(prediction_model_file):
     data.replace(to_remove, np.nan, inplace=True)
     data = data[pd.notnull(data['variety'])]
 
+    # 中文分词
+    def jieba_cut(input):
+        res = jieba.cut(input, cut_all=False, HMM=True)
+        res = " ".join(res)
+        # print(res)
+        return res
+    data['desc_zh_cut'] = data.apply(lambda row: jieba_cut(row["desc_zh"]), axis=1)
+
     data.to_csv(dataset_resampled_file)
 else:
     # get resampled data set
     data = pd.read_csv(dataset_resampled_file)
-
-
-# 中文分词
-def jieba_cut(input):
-    res = jieba.cut(input, cut_all=False, HMM=True)
-    res = " ".join(res)
-    print(res)
-    return res
-data['description_zh_cut'] = data.apply(lambda row: jieba_cut(row["description_zh"]), axis=1)
 
 
 train_size = int(len(data) * .8)
@@ -60,12 +60,12 @@ print("Train size: %d" % train_size)
 print("Test size: %d" % (len(data) - train_size))
 
 # Train features
-description_train = data['description_zh_cut'][:train_size]
+description_train = data['desc_zh_cut'][:train_size]
 price_train = data['price'][:train_size]
 # Train labels
 labels_train_arr = data['variety'][:train_size]
 # Test features
-description_test = data['description_zh_cut'][train_size:]
+description_test = data['desc_zh_cut'][train_size:]
 price_test = data['price'][train_size:]
 # Test labels
 labels_test_arr = data['variety'][train_size:]
@@ -73,7 +73,7 @@ labels_test_arr = data['variety'][train_size:]
 all_varieties = data['variety'][:]
 # if not os.path.exists(prediction_model_file):
 #     all_varieties.to_csv("model/variety_labels.csv", header=['variety'])
-all_description = data['description_zh_cut'][:]
+all_description = data['desc_zh_cut'][:]
 
 
 encoder = LabelEncoder()
