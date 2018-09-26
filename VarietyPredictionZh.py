@@ -149,7 +149,7 @@ if not os.path.exists(prediction_model_file):
     combined_model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
     # Training
-    combined_model.fit([description_bow_train, price_train] + [train_embed], labels_train, epochs=100, batch_size=128)
+    combined_model.fit([description_bow_train, price_train] + [train_embed], labels_train, epochs=500, batch_size=128)
 
     # Evaluation
     score = combined_model.evaluate([description_bow_test, price_test] + [test_embed], labels_test, batch_size=128)
@@ -171,5 +171,6 @@ for i in range(num_predictions):
     print(description_test.iloc[i])
     label_name = encoder.inverse_transform(index)
 
-    print('index: ', index, 'label_name: ', label_name, ' Predicted: ', labels_train_arr.iloc[index],
-          'Actual: ', labels_test_arr.iloc[i], '\n')
+    # print('index: ', index, 'label_name: ', label_name, ' Predicted: ', labels_train_arr.iloc[index],
+    #       'Actual: ', labels_test_arr.iloc[i], '\n')
+    print('index: ', index, 'Predicted: ', label_name, 'Actual: ', labels_test_arr.iloc[i], '\n')

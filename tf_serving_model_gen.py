@@ -5,13 +5,13 @@ import tensorflow as tf
 
 tf.keras.backend.set_learning_phase(0)  # Ignore dropout at inference
 
-model = tf.keras.models.load_model('./model/variety_prediction.h5')
+model = tf.keras.models.load_model('./model/variety_prediction_zh.h5')
 
 print(model.input)
 print(model.outputs)
 
 
-export_path = './model/VarietyPrediction/1'
+export_path = './model/VarietyPredictionZh/1'
 
 # Fetch the Keras session and save the model
 # The signature definition is defined by the input and output tensors
