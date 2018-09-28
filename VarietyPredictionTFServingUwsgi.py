@@ -1,14 +1,18 @@
 import os, json, requests
 import pandas as pd
 import numpy as np
+import jieba
 import keras
 from sklearn.preprocessing import LabelEncoder
 from keras import backend as K
 from flask import Flask, request
 app = Flask(__name__)
 
-tf_serving_api = "http://192.168.0.106:8501/v1/models/VarietyPrediction:predict"
-base_dir="/Users/wxf/Documents/GitHub/FL-WINE-PROJECT/"
+tf_serving_api = "http://192.168.0.106:8501/v1/models/VarietyPredictionZh:predict"
+base_dir="/etc/docker-fl-wine-project/FL-WINE-PROJECT/"
+
+jieba_dict_file = base_dir + "dataset/jieba-dict/dict.txt"
+jieba.load_userdict(jieba_dict_file)
 
 data = pd.read_csv(base_dir + "dataset/wine-review/winemag-data-130k-v2-zh-resampled.csv")
 all_description = data['desc_zh_cut'][:]
@@ -26,10 +30,10 @@ max_seq_length = 170
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    variety_predicted = ""
     # if request.method == "POST":
     # request param
     desc = request.values.get("desc", "")
+    desc = jieba_cut(desc)
     price = float(request.values.get("price", "0.0"))
     print(desc, price)
 
@@ -50,13 +54,17 @@ def get_predicted(description_bow_test, price, test_embed):
     payload = {
         "instances": [{"input_bow": description_bow_test.tolist(),
                        "input_price": price.tolist(),
-                       "input_embed": test_embed.tolist()}]
+                       "input_embed": test_embed.astype(np.float32).tolist()}]
     }
 
     r = requests.post(tf_serving_api, json=payload)
     rdict = json.loads(r.content.decode("utf-8"))
     return rdict["predictions"]
 
+def jieba_cut(input):
+    res = jieba.cut(input, cut_all=False, HMM=True)
+    res = " ".join(res)
+    return res
 
 def _ret(msg="", errcode=0, data={}):
     ret = {

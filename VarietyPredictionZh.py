@@ -161,9 +161,10 @@ else:
 
 
 # predict
+print([description_bow_test, price_test])
 predictions = combined_model.predict([description_bow_test, price_test] + [test_embed])
 
-num_predictions = 60
+num_predictions = 2
 
 for i in range(num_predictions):
     prediction = predictions[i]

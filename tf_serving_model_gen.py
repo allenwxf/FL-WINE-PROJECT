@@ -7,7 +7,7 @@ tf.keras.backend.set_learning_phase(0)  # Ignore dropout at inference
 
 model = tf.keras.models.load_model('./model/variety_prediction_zh.h5')
 
-print(model.input)
+print(model.input, model.input[0], model.input[1], model.input[2])
 print(model.outputs)
 
 
