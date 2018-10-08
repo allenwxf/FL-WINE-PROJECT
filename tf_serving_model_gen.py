@@ -6,12 +6,10 @@ import tensorflow as tf
 tf.keras.backend.set_learning_phase(0)  # Ignore dropout at inference
 
 model = tf.keras.models.load_model('./model/variety_prediction_zh.h5')
-
-print(model.input, model.input[0], model.input[1], model.input[2])
-print(model.outputs)
+print(model.input, model.outputs)
 
 
-export_path = './model/VarietyPredictionZh/1'
+export_path = './model/VarietyPredictionZh/3'
 
 # Fetch the Keras session and save the model
 # The signature definition is defined by the input and output tensors
@@ -22,5 +20,6 @@ with tf.keras.backend.get_session() as sess:
         sess,
         export_path,
         inputs={'input_bow': model.input[0], 'input_price': model.input[1], 'input_embed': model.input[2]},
+        # inputs={t.name: t for t in model.input},
         outputs={'outputs': model.outputs[0]}
     )

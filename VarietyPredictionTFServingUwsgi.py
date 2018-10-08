@@ -8,8 +8,8 @@ from keras import backend as K
 from flask import Flask, request
 app = Flask(__name__)
 
-tf_serving_api = "http://192.168.0.106:8501/v1/models/VarietyPredictionZh:predict"
-base_dir="/etc/docker-fl-wine-project/FL-WINE-PROJECT/"
+tf_serving_api = "http://127.0.0.1:8501/v1/models/VarietyPredictionZh:predict"
+base_dir="/Users/wxf/Documents/GitHub/FL-WINE-PROJECT/"
 
 jieba_dict_file = base_dir + "dataset/jieba-dict/dict.txt"
 jieba.load_userdict(jieba_dict_file)
@@ -35,7 +35,7 @@ def index():
     desc = request.values.get("desc", "")
     desc = jieba_cut(desc)
     price = float(request.values.get("price", "0.0"))
-    print(desc, price)
+    print(desc, price, type(desc), type(price))
 
     desc = pd.Series([desc])
     price = pd.Series([price])
@@ -51,13 +51,21 @@ def index():
     return _ret(data={"variety_predicted": variety_predicted})
 
 def get_predicted(description_bow_test, price, test_embed):
+    # print(description_bow_test.shape, price.shape, test_embed.shape)
+    description_bow_test = description_bow_test.flatten()
+    # print(description_bow_test.shape)
+    # price = price.values.reshape(1, 1)
+    test_embed = test_embed.flatten()
+
     payload = {
         "instances": [{"input_bow": description_bow_test.tolist(),
                        "input_price": price.tolist(),
-                       "input_embed": test_embed.astype(np.float32).tolist()}]
+                       "input_embed": test_embed.tolist()}]
     }
 
+    # print(payload)
     r = requests.post(tf_serving_api, json=payload)
+    print(r.text)
     rdict = json.loads(r.content.decode("utf-8"))
     return rdict["predictions"]
 

@@ -67,6 +67,7 @@ labels_train_arr = data['variety'][:train_size]
 # Test features
 description_test = data['desc_zh_cut'][train_size:]
 price_test = data['price'][train_size:]
+
 # Test labels
 labels_test_arr = data['variety'][train_size:]
 
@@ -110,8 +111,8 @@ if not os.path.exists(prediction_model_file):
     ## Wide Model ##
     ################
     # 搭建Wide模型
-    bow_inputs = layers.Input(shape=(vocab_size,))
-    price_inputs = layers.Input(shape=(1,))
+    bow_inputs = layers.Input(shape=(vocab_size,), dtype='float32', name='input_bow')
+    price_inputs = layers.Input(shape=(1,), dtype='float32', name='input_price')
     merged_layer = layers.concatenate([bow_inputs, price_inputs])
     merged_layer = layers.Dense(256, activation='relu')(merged_layer)
     inter_layer = layers.Dense(num_classes)(merged_layer)
@@ -126,7 +127,7 @@ if not os.path.exists(prediction_model_file):
     ################
     ## Deep Model ##
     ################
-    deep_inputs = layers.Input(shape=(max_seq_length,))
+    deep_inputs = layers.Input(shape=(max_seq_length,), dtype='int32', name='input_embed')
     embedding = layers.Embedding(vocab_size, 8, input_length=max_seq_length)(deep_inputs)
     embedding = layers.Flatten()(embedding)
     embedding = layers.Dense(num_classes)(embedding)
@@ -161,7 +162,7 @@ else:
 
 
 # predict
-print([description_bow_test, price_test])
+# print([description_bow_test, price_test])
 predictions = combined_model.predict([description_bow_test, price_test] + [test_embed])
 
 num_predictions = 2
