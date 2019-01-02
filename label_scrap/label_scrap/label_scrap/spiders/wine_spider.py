@@ -1,4 +1,4 @@
-import scrapy, requests
+import scrapy, requests, os
 
 class WineSpider(scrapy.Spider):
     name = "wine"
@@ -10,7 +10,7 @@ class WineSpider(scrapy.Spider):
         # ]
         # for url in urls:
         baseurl = "https://www.wine.com/list/wine/7155/"
-        for page in range(2, 100):
+        for page in range(15000, 16000):
             yield scrapy.Request(url=baseurl+str(page), callback=self.parse)
     # start_urls = [
     #         "https://www.wine.com/list/wine/7155",
@@ -73,12 +73,20 @@ class WineSpider(scrapy.Spider):
             this_price = int(this_price_whole) + int(this_price_fractional) * 0.01
             prices.append(this_price)
 
+        if len(prices) != len(detail_links) :
+            prices = []
+            for item in detail_links:
+                prices.append(0.0)
+
         wine_datas = zip(detail_links, labels, winenames, varieties, origins, ratings, avg_ratings, rating_peoples, prices)
 
         for wine_data in wine_datas:
-            ir = requests.get(response.urljoin(wine_data[1]))
             label_name = wine_data[1].replace("/", "_")
-            open(img_save_dir + "/" + label_name, "wb").write(ir.content)
+
+            if not os.path.exists(img_save_dir + "/" + label_name):
+                ir = requests.get(response.urljoin(wine_data[1]))
+                open(img_save_dir + "/" + label_name, "wb").write(ir.content)
+
             yield {
                 "page": page,
                 "detail_links": response.urljoin(wine_data[0]),
